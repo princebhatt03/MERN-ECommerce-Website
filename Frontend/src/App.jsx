@@ -1,10 +1,15 @@
 import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import FrontPage from './pages/FrontPage';
 
 const App = () => {
   return (
-    <>
-      <h1 className="bg-red-500 text-center">Hello, World!</h1>
-    </>
+    <Routes>
+      <Route
+        path="/"
+        element={<FrontPage />}
+      />
+    </Routes>
   );
 };
 
