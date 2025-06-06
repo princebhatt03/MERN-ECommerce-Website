@@ -1,14 +1,22 @@
 import { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import logo from '../assets/images/logo.png';
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const isAuthenticated = !!localStorage.getItem('userToken');
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('userToken');
+    localStorage.removeItem('userInfo');
+    navigate('/userLogin');
   };
 
   const navLinks = [
@@ -38,7 +46,7 @@ const Header = () => {
             {menuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
-        <nav className="hidden md:flex space-x-6">
+        <nav className="hidden md:flex space-x-6 items-center">
           {navLinks.map(link => (
             <NavLink
               key={link.path}
@@ -51,6 +59,13 @@ const Header = () => {
               {link.label}
             </NavLink>
           ))}
+          {isAuthenticated && (
+            <button
+              onClick={handleLogout}
+              className="text-gray-700 hover:text-red-500 font-medium transition-colors duration-200">
+              Logout
+            </button>
+          )}
         </nav>
       </div>
 
@@ -74,6 +89,16 @@ const Header = () => {
                 {link.label}
               </NavLink>
             ))}
+            {isAuthenticated && (
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setMenuOpen(false);
+                }}
+                className="text-left text-gray-700 hover:text-red-500 font-medium">
+                Logout
+              </button>
+            )}
           </div>
         </motion.div>
       )}

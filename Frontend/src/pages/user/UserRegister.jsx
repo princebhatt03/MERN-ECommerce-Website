@@ -38,30 +38,28 @@ const UserRegister = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccessMessage('User Registered Successfully!');
+        setSuccessMessage('User registered successfully!');
         setErrorMessage('');
-        setFormData({
-          fullName: '',
-          username: '',
-          email: '',
-          mobile: '',
-          password: '',
-        });
 
-        // Optional: Redirect after registration
+        // Save JWT token and user data in localStorage
+        localStorage.setItem('userToken', data.token);
+        localStorage.setItem('userInfo', JSON.stringify(data.user));
+
+        // Optional: Redirect after successful registration
         setTimeout(() => {
-          navigate('/userLogin'); // or wherever you want to redirect
-        }, 2000);
+          navigate('/'); // Redirect to home or dashboard
+        }, 1500);
       } else {
         setErrorMessage(data.message || 'Error registering user.');
         setSuccessMessage('');
       }
     } catch (error) {
-      console.error('Error:', error);
-      setErrorMessage('Server Error! Please try again.');
+      console.error('Registration Error:', error);
+      setErrorMessage('Server error! Please try again later.');
       setSuccessMessage('');
     }
 
+    // Clear messages after a few seconds
     setTimeout(() => {
       setSuccessMessage('');
       setErrorMessage('');
@@ -126,9 +124,9 @@ const UserRegister = () => {
             name="password"
             placeholder="Password"
             value={formData.password}
-            autoComplete="current-password"
             onChange={handleChange}
             className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            autoComplete="new-password"
             required
           />
 

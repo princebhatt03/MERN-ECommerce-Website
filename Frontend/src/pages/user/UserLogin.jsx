@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 const UserLogin = () => {
@@ -11,6 +10,7 @@ const UserLogin = () => {
     username: '',
     password: '',
   });
+
   const handleChange = e => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -36,18 +36,24 @@ const UserLogin = () => {
       if (response.ok) {
         setSuccessMessage('Login successful!');
         setErrorMessage('');
+
+        // Store token and user data in localStorage
         localStorage.setItem('userToken', data.token);
+        localStorage.setItem('userInfo', JSON.stringify(data.user));
+
+        // Navigate to home page
         navigate('/');
       } else {
         setErrorMessage(data.message || 'Invalid username or password.');
         setSuccessMessage('');
       }
     } catch (error) {
-      console.error('Error:', error);
-      setErrorMessage('Server Error! Please try again.');
+      console.error('Login Error:', error);
+      setErrorMessage('Server error! Please try again later.');
       setSuccessMessage('');
     }
 
+    // Clear messages after delay
     setTimeout(() => {
       setSuccessMessage('');
       setErrorMessage('');
@@ -62,6 +68,9 @@ const UserLogin = () => {
         {errorMessage && (
           <p className="text-red-500 mb-4 text-sm">{errorMessage}</p>
         )}
+        {successMessage && (
+          <p className="text-green-600 mb-4 text-sm">{successMessage}</p>
+        )}
 
         <form
           onSubmit={handleSubmit}
@@ -74,6 +83,7 @@ const UserLogin = () => {
             onChange={handleChange}
             className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
             required
+            autoComplete="username"
           />
 
           <input
@@ -84,6 +94,7 @@ const UserLogin = () => {
             onChange={handleChange}
             className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
             required
+            autoComplete="current-password"
           />
 
           <button
