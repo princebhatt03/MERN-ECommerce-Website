@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
@@ -6,25 +6,41 @@ import logo from '../assets/images/logo.png';
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    !!localStorage.getItem('token')
+  ); // Use 'token' key
   const navigate = useNavigate();
-  const isAuthenticated = !!localStorage.getItem('userToken');
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('userToken');
-    localStorage.removeItem('userInfo');
-    navigate('/userLogin');
+    localStorage.removeItem('token'); // Clear the token key exactly as stored
+    localStorage.removeItem('user'); // Clear user info as well
+    setIsAuthenticated(false); // Update state to re-render Header and hide Logout button
+    navigate('/userLogin'); // Redirect to login page
   };
+
+  // In case token changes elsewhere, listen to storage event to sync auth status
+  useEffect(() => {
+    function syncAuthStatus() {
+      setIsAuthenticated(!!localStorage.getItem('token'));
+    }
+
+    window.addEventListener('storage', syncAuthStatus);
+
+    return () => {
+      window.removeEventListener('storage', syncAuthStatus);
+    };
+  }, []);
 
   const navLinks = [
     { label: 'Home', path: '/' },
     { label: 'Shop', path: '/shop' },
     { label: 'Categories', path: '/categories' },
     { label: 'Cart', path: '/cart' },
-    { label: 'Profile', path: '/profile' },
+    { label: 'Profile', path: '/userProfile' },
   ];
 
   return (
@@ -39,6 +55,7 @@ const Header = () => {
             className="h-20 w-auto inline-block mr-2"
           />
         </Link>
+
         <div className="md:hidden">
           <button
             onClick={toggleMenu}
@@ -46,6 +63,7 @@ const Header = () => {
             {menuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
+
         <nav className="hidden md:flex space-x-6 items-center">
           {navLinks.map(link => (
             <NavLink
@@ -59,6 +77,7 @@ const Header = () => {
               {link.label}
             </NavLink>
           ))}
+
           {isAuthenticated && (
             <button
               onClick={handleLogout}
@@ -89,6 +108,7 @@ const Header = () => {
                 {link.label}
               </NavLink>
             ))}
+
             {isAuthenticated && (
               <button
                 onClick={() => {

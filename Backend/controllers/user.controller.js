@@ -7,7 +7,7 @@ const JWT_EXPIRES_IN = '7d';
 
 function userController() {
   return {
-    // ✅ User Registration Controller
+    // User Registration Controller
     async registerUser(req, res) {
       const { fullName, username, email, mobile, password } = req.body;
 
@@ -49,7 +49,7 @@ function userController() {
       }
     },
 
-    // ✅ User Login Controller with JWT
+    // User Login Controller with JWT
     async loginUser(req, res) {
       const { username, password } = req.body;
 
@@ -91,7 +91,7 @@ function userController() {
       }
     },
 
-    // ✅ Middleware - Protect Routes
+    // Middleware - Protect Routes
     authenticateToken(req, res, next) {
       const authHeader = req.headers['authorization'];
       const token = authHeader && authHeader.split(' ')[1];
@@ -107,7 +107,7 @@ function userController() {
       });
     },
 
-    // ✅ Logout Controller (client-side can just remove token)
+    // Logout Controller (client-side can just remove token)
     logoutUser(req, res) {
       return res.status(200).json({
         success: true,
@@ -115,41 +115,51 @@ function userController() {
       });
     },
 
-    // ✅ Update User Controller
-    async updateUser(req, res) {
-      const { id } = req.params;
-      const { fullName, username, email, mobile, password } = req.body;
+    // Updated User Controller with password confirmation
+    async updateUserProfile(req, res) {
+      const userId = req.user.id; // from decoded token
+      const { currentPassword, updates } = req.body;
 
       try {
-        const user = await User.findById(id);
-        if (!user) {
-          return res.status(404).json({ message: 'User not found' });
+        const user = await User.findById(userId);
+
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        // 1. Verify current password
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+          return res
+            .status(401)
+            .json({ message: 'Incorrect current password' });
         }
 
-        if (fullName) user.fullName = fullName;
-        if (username) user.username = username;
-        if (email) user.email = email;
-        if (mobile) user.mobile = mobile;
-
-        if (password) {
-          const hashedPassword = await bcrypt.hash(password, 10);
-          user.password = hashedPassword;
+        // 2. If password update is requested, hash it
+        if (updates.password) {
+          updates.password = await bcrypt.hash(updates.password, 10);
         }
 
-        user.updatedAt = new Date();
-        const updatedUser = await user.save();
+        // 3. Apply updates safely
+        Object.assign(user, updates);
+        await user.save();
 
-        return res.status(200).json({
+        // 4. Prepare payload for new JWT
+        const updatedPayload = {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          mobile: user.mobile,
+        };
+
+        // 5. Sign and return new token
+        const newToken = jwt.sign(updatedPayload, JWT_SECRET, {
+          expiresIn: JWT_EXPIRES_IN,
+        });
+
+        res.json({
           success: true,
-          message: 'User updated successfully',
-          user: {
-            id: updatedUser._id,
-            username: updatedUser.username,
-            fullName: updatedUser.fullName,
-            email: updatedUser.email,
-            mobile: updatedUser.mobile,
-            updatedAt: updatedUser.updatedAt,
-          },
+          message: 'Profile updated successfully',
+          token: newToken,
+          user: updatedPayload,
         });
       } catch (error) {
         console.error('Error updating user:', error);
@@ -157,7 +167,7 @@ function userController() {
       }
     },
 
-    // ✅ Delete User Controller
+    // Delete User Controller
     async deleteUser(req, res) {
       const { id } = req.params;
 
