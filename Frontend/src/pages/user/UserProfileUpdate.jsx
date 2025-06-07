@@ -223,7 +223,7 @@ const UserProfileUpdate = () => {
         </form>
 
         {showPasswordModal && (
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-40 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-white/30 backdrop-blur flex items-center justify-center z-50">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
